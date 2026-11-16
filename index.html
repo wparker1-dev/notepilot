@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#6c59e8">
 <title>NotePilot — Less prep. More learning.</title>
-<link rel="stylesheet" href="./static/style.css"><script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script defer src="./config.js"></script><script defer src="./static/web_api.js"></script><script defer src="./static/app.js"></script>
+<link rel="stylesheet" href="./static/style.css"><script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script defer src="./config.js"></script><script defer src="./static/ocr.js"></script><script defer src="./static/web_api.js"></script><script defer src="./static/app.js"></script>
 </head>
 <body>
 <header class="topbar"><div class="navwrap"><a class="brand" href="#upload"><span class="brandmark">N</span> NotePilot</a><nav aria-label="Main navigation"><a href="#library" id="nav-library">Study materials</a><a href="#upload" id="nav-upload">Upload materials</a><a href="#shop" id="nav-shop">Rewards shop</a></nav><span class="localbadge" id="coin-balance">🪙 0 coins</span></div></header>
@@ -16,7 +16,7 @@
 <div class="steps"><span class="active">1 <small>Add notes</small></span><i></i><span>2 <small>Choose a format</small></span><i></i><span>3 <small>Start studying</small></span></div>
 <div class="upload-layout">
 <div class="panel">
-<div id="dropzone" class="dropzone"><div class="uploadicon">↑</div><h2>Drag and drop your notes here</h2><p>PDF, PowerPoint, Word, Markdown, or plain text</p><button id="browse" class="primary">Browse files</button><input id="files" type="file" accept=".pdf,.pptx,.docx,.txt,.md" multiple hidden><p class="fine">15 MB per file · 12 files per upload · Text-based documents only</p></div>
+<div id="dropzone" class="dropzone"><div class="uploadicon">↑</div><h2>Drag and drop your notes here</h2><p>PDF, screenshots, PowerPoint, Word, Markdown, or plain text</p><button id="browse" class="primary">Browse files</button><input id="files" type="file" accept=".pdf,.pptx,.docx,.txt,.md,.png,.jpg,.jpeg,.webp,.bmp" multiple hidden><p class="fine">15 MB per file · 12 files per upload · Scans and images supported</p><label for="ocr-mode">Picture and scanned-page OCR</label><select id="ocr-mode" class="mode-select"><option value="auto">Automatic OCR for scans and embedded images (recommended)</option><option value="all">OCR every PDF page, even if it contains text</option><option value="off">Skip OCR (selectable text only)</option></select><p class="fine">English OCR runs in this browser. The first scan downloads language data; large scans can take time. Review recognition for errors.</p><p id="upload-status" class="fine" role="status" aria-live="polite"></p></div>
 <div class="divider"><span>or start with text</span></div>
 <form id="paste-form"><label for="paste-title">Notes title</label><input id="paste-title" placeholder="e.g. Biology — Cell respiration" maxlength="150" required><label for="paste-text">Paste your class notes</label><textarea id="paste-text" rows="5" placeholder="Paste notes, definitions, or a lecture outline…" maxlength="300000" required></textarea><div class="row"><button class="secondary" type="submit">Save pasted notes</button><button type="button" class="textbutton" id="demo">Load sample notes</button></div></form>
 </div>

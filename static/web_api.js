@@ -10,6 +10,7 @@
     {id:'sunset', name:'Sunset Peach', cost:110, colors:['#cc5b4d','#fff0df'], description:'A warm and focused look'}
   ];
   const defaultProfile = () => ({id:'profile', coins:0, unlocked:['lavender'], equipped:'lavender', rewardedIds:[]});
+  let uploadProgress = () => {};
   let dbPromise;
   function db() {
     if (!dbPromise) dbPromise = new Promise((resolve,reject) => {
@@ -73,60 +74,140 @@
     if(text)chunks.push(text);
     return chunks.filter(Boolean).map((s,i)=>({label:`${label} · section ${i+1}`,text:s}));
   };
-  async function extract(file) {
+  async function extract(file,ocrMode='auto') {
     if(file.size>15*1024*1024)error(`${file.name}: maximum file size is 15 MB.`);
     const ext=file.name.split('.').pop().toLowerCase();
-    if(!['txt','md','pdf','pptx','docx'].includes(ext))error(`${file.name}: supported files are PDF, PPTX, DOCX, TXT and MD.`);
+    if(!['txt','md','pdf','pptx','docx','png','jpg','jpeg','webp','bmp'].includes(ext))
+      error(`${file.name}: upload PDF, PPTX, DOCX, TXT, MD, PNG, JPG, WEBP or BMP.`);
+    if(!['auto','all','off'].includes(ocrMode))error('Invalid OCR setting.');
+    const useOcr=ocrMode!=='off';
     let units=[];
-    if(ext==='txt'||ext==='md') {
-      const raw=await file.arrayBuffer();
-      const text=new TextDecoder('utf-8',{fatal:true}).decode(raw);
-      units=split(text,'Text');
-    } else if(ext==='pdf') {
-      let pdfjs;
-      try {pdfjs=await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs');}
-      catch {error('PDF parser could not load. Check your internet connection and try again.');}
-      pdfjs.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
-      let pdf;
-      try {pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;}
-      catch {error(`${file.name}: cannot read this PDF (password-protected or damaged PDFs are unsupported).`);}
-      if(pdf.numPages>250)error('PDF exceeds the 250-page limit.');
-      for(let i=1;i<=pdf.numPages;i++){
-        const page=await pdf.getPage(i);
-        const content=await page.getTextContent();
-        const lines=content.items.map(x=>x.str||'').join(' ');
-        units.push(...split(lines,`Page ${i}`));
-        page.cleanup();
+    const ocr=window.NotePilotOCR;
+    let session;
+    const report=message => uploadProgress(`${file.name}: ${message}`);
+    async function recognize(blob,label) {
+      if(!useOcr)return '';
+      if(!ocr)error('OCR helper is missing. Reload the page and try again.');
+      if(!session)session=ocr.createSession(report);
+      return await session.recognize(blob,label);
+    }
+    async function appendImage(zip,path,label) {
+      const entry=zip.file(path);
+      if(!entry||!/\.(png|jpe?g|webp|bmp)$/i.test(path))return;
+      const raw=await entry.async('uint8array');
+      if(raw.byteLength>10*1024*1024)return;
+      const mime=/\.png$/i.test(path)?'image/png':/\.webp$/i.test(path)?'image/webp':/\.bmp$/i.test(path)?'image/bmp':'image/jpeg';
+      const blob=new Blob([raw],{type:mime});
+      if(!(await ocr.readableImage(blob)))return;
+      const text=await recognize(blob,label);
+      units.push(...split(text,`${label} · OCR`));
+    }
+    function xmlText(raw) {
+      const xml=new DOMParser().parseFromString(raw,'application/xml');
+      if(xml.querySelector('parsererror'))error('Invalid Office document XML.');
+      return xml;
+    }
+    function paragraphs(raw) {
+      const xml=xmlText(raw);
+      return [...xml.getElementsByTagNameNS('*','p')]
+        .map(p=>[...p.getElementsByTagNameNS('*','t')].map(t=>t.textContent).join(''))
+        .filter(Boolean).join('\n');
+    }
+    function imageRels(raw,sectionXml,prefix) {
+      if(!raw)return [];
+      const xml=xmlText(raw);
+      const matches=[...sectionXml.matchAll(/\br:embed\s*=\s*["']([^"']+)["']/g)].map(m=>m[1]);
+      const wanted=new Set(matches);
+      const files=[];
+      for(const rel of xml.getElementsByTagNameNS('*','Relationship')) {
+        const id=rel.getAttribute('Id');
+        const target=rel.getAttribute('Target')||'';
+        if(!wanted.has(id)||rel.getAttribute('TargetMode')==='External')continue;
+        const match=target.match(/(?:^|\/)media\/([^/?#]+)$/i);
+        if(match)files.push(`${prefix}/media/${match[1]}`);
       }
-      await pdf.destroy();
-    } else {
-      if(!globalThis.JSZip)error('Office document parser did not load. Check your internet connection.');
-      let zip;
-      try {zip=await JSZip.loadAsync(await file.arrayBuffer(),{checkCRC32:false});}
-      catch {error(`${file.name}: invalid Office file.`);}
-      const entries=Object.values(zip.files);
-      if(entries.length>3000 || entries.reduce((n,x)=>n+(x._data?.uncompressedSize||0),0)>60*1024*1024)error('Office document exceeds safe extraction limits.');
-      const parse = text => {
-        const xml=new DOMParser().parseFromString(text,'application/xml');
-        if(xml.querySelector('parsererror'))error('Invalid Office document XML.');
-        const paragraphs=[...xml.getElementsByTagNameNS('*','p')];
-        return paragraphs.map(p=>[...p.getElementsByTagNameNS('*','t')].map(t=>t.textContent).join('')).filter(Boolean).join('\n');
-      };
-      if(ext==='docx') {
-        const item=zip.file('word/document.xml');
-        if(!item)error('Word document is missing its text content.');
-        units=split(parse(await item.async('string')),'Document');
+      return [...new Set(files)];
+    }
+    try {
+      if(ext==='txt'||ext==='md') {
+        const raw=await file.arrayBuffer();
+        const text=new TextDecoder('utf-8',{fatal:true}).decode(raw);
+        units=split(text,'Text');
+      } else if(['png','jpg','jpeg','webp','bmp'].includes(ext)) {
+        if(!useOcr)error(`${file.name}: enable OCR to read images.`);
+        units=split(await recognize(file,'Image 1'),'Image 1 · OCR');
+      } else if(ext==='pdf') {
+        report('Opening PDF…');
+        let pdfjs;
+        try {pdfjs=await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs');}
+        catch {error('PDF parser could not load. Check your internet connection and try again.');}
+        pdfjs.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+        let pdf;
+        try {pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;}
+        catch {error(`${file.name}: cannot read this PDF (password-protected or damaged PDFs are unsupported).`);}
+        try {
+          if(pdf.numPages>250)error('PDF exceeds the 250-page limit.');
+          for(let i=1;i<=pdf.numPages;i++){
+            const page=await pdf.getPage(i);
+            report(`Extracting page ${i} of ${pdf.numPages}…`);
+            try {
+              const content=await page.getTextContent();
+              const lines=content.items.map(x=>x.str||'').join(' ').trim();
+              const scanned=useOcr&&(ocrMode==='all'||lines.replace(/\s/g,'').length<45);
+              let scannedText='';
+              if(scanned){
+                const rendered=await ocr.renderPage(page);
+                scannedText=await recognize(rendered,`page ${i} of ${pdf.numPages}`);
+              }
+              if(lines)units.push(...split(lines,`Page ${i}`));
+              if(scannedText)units.push(...split(scannedText,`Page ${i} · OCR`));
+            } finally {page.cleanup();}
+          }
+        } finally {await pdf.destroy();}
       } else {
-        const slides=entries.map(f=>f.name).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>Number(a.match(/slide(\d+)/)[1])-Number(b.match(/slide(\d+)/)[1]));
-        if(slides.length>250)error('PowerPoint exceeds the 250-slide limit.');
-        for(const name of slides){
-          const number=Number(name.match(/slide(\d+)/)[1]);
-          units.push(...split(parse(await zip.file(name).async('string')),`Slide ${number}`));
+        if(!globalThis.JSZip)error('Office document parser did not load. Check your internet connection.');
+        report('Reading Office document…');
+        let zip;
+        try {zip=await JSZip.loadAsync(await file.arrayBuffer(),{checkCRC32:false});}
+        catch {error(`${file.name}: invalid Office file.`);}
+        const entries=Object.values(zip.files);
+        if(entries.length>3000||entries.reduce((n,x)=>n+(x._data?.uncompressedSize||0),0)>60*1024*1024)
+          error('Office document exceeds safe extraction limits.');
+        if(ext==='docx') {
+          const item=zip.file('word/document.xml');
+          if(!item)error('Word document is missing its document.xml.');
+          const body=await item.async('string');
+          units=split(paragraphs(body),'Document');
+          if(useOcr){
+            const rel=zip.file('word/_rels/document.xml.rels');
+            const images=rel?imageRels(await rel.async('string'),body,'word'):[];
+            for(let j=0;j<images.length;j++){
+              report(`Checking Word image ${j+1} of ${images.length}…`);
+              await appendImage(zip,images[j],`Document image ${j+1}`);
+            }
+          }
+        } else {
+          const slides=entries.map(f=>f.name).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n))
+            .sort((a,b)=>Number(a.match(/slide(\d+)/)[1])-Number(b.match(/slide(\d+)/)[1]));
+          if(slides.length>250)error('PowerPoint exceeds the 250-slide limit.');
+          for(const name of slides){
+            const number=Number(name.match(/slide(\d+)/)[1]);
+            report(`Reading slide ${number}…`);
+            const slide=await zip.file(name).async('string');
+            units.push(...split(paragraphs(slide),`Slide ${number}`));
+            if(useOcr){
+              const rel=zip.file(`ppt/slides/_rels/slide${number}.xml.rels`);
+              const images=rel?imageRels(await rel.async('string'),slide,'ppt'):[];
+              for(let j=0;j<images.length;j++)await appendImage(zip,images[j],`Slide ${number} image ${j+1}`);
+            }
+          }
         }
       }
-    }
-    if(!units.length)error(`${file.name}: no selectable text. Scanned images need OCR before uploading.`);
-    if(units.reduce((n,u)=>n+u.text.length,0)>300000)error(`${file.name}: extracted notes exceed 300,000 characters.`);
+    } finally {if(session)await session.close();}
+    if(!units.length)error(`${file.name}: no readable text found. Try a clearer scan, or enable OCR.`);
+    if(units.reduce((n,u)=>n+u.text.length,0)>300000)
+      error(`${file.name}: extracted notes exceed 300,000 characters.`);
+    report(`Finished extracting ${units.length} text sections.`);
     return units.map((u,i)=>({...u,id:String(i+1)}));
   }
   const tokens = s => new Set((String(s).toLowerCase().match(/[a-z0-9]{2,}/g)||[]).filter(w=>!STOP.has(w)));
@@ -205,9 +286,10 @@
     }
     if(bits[1]==='upload'&&method==='POST'){
       const files=body.getAll('files');
+      const ocrMode=body.get('ocr_mode')||'auto';
       if(!files.length||files.length>12)error('Choose 1–12 files.');
       const docs=[];
-      for(const f of files)docs.push({id:id(),name:f.name.slice(0,150),created:stamp(),units:await extract(f)});
+      for(const f of files)docs.push({id:id(),name:f.name.slice(0,150),created:stamp(),units:await extract(f,ocrMode)});
       await transaction(['documents'],'readwrite',tx=>{const store=tx.objectStore('documents');docs.forEach(d=>store.put(d));});
       return {ids:docs.map(d=>d.id)};
     }
@@ -402,5 +484,7 @@
     });
     return {documents:backup.documents.length,materials:backup.materials.length};
   }
-  window.NotePilotLocal={api:handle,exportSet,exportWorkspace,importWorkspace,profile};
+  window.NotePilotLocal={api:handle,exportSet,exportWorkspace,importWorkspace,profile,
+    setUploadProgress:fn=>{uploadProgress=typeof fn==='function'?fn:()=>{};}
+  };
 })();

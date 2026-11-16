@@ -4,7 +4,7 @@ compatibility_date = "2026-11-16"
 
 # Set in Cloudflare dashboard or override during deployment.
 [vars]
-ALLOWED_ORIGIN = "https://YOUR-USERNAME.github.io"
+ALLOWED_ORIGIN = "https://wparker1-dev.github.io"
 OPENAI_MODEL = "gpt-4o-mini"
 DAILY_LIMIT = "12"
 
