@@ -1,0 +1,14 @@
+name = "notepilot-ai"
+main = "worker.js"
+compatibility_date = "2026-11-16"
+
+# Set in Cloudflare dashboard or override during deployment.
+[vars]
+ALLOWED_ORIGIN = "https://YOUR-USERNAME.github.io"
+OPENAI_MODEL = "gpt-4o-mini"
+DAILY_LIMIT = "12"
+
+# Create a KV namespace and replace its identifier here.
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

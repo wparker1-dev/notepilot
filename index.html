@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#6c59e8">
+<title>NotePilot — Less prep. More learning.</title>
+<link rel="stylesheet" href="./static/style.css"><script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script defer src="./config.js"></script><script defer src="./static/web_api.js"></script><script defer src="./static/app.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="navwrap"><a class="brand" href="#upload"><span class="brandmark">N</span> NotePilot</a><nav aria-label="Main navigation"><a href="#library" id="nav-library">Study materials</a><a href="#upload" id="nav-upload">Upload materials</a><a href="#shop" id="nav-shop">Rewards shop</a></nav><span class="localbadge" id="coin-balance">🪙 0 coins</span></div></header>
+<main id="main">
+<section id="upload-view" class="view">
+<div class="eyebrow">YOUR NOTES. YOUR NEXT BREAKTHROUGH.</div>
+<h1>Less prep.<br><span>More learning.</span></h1>
+<p class="lead">Turn lecture slides and class notes into study materials.<br>Spend your time understanding, not reformatting.</p>
+<div class="steps"><span class="active">1 <small>Add notes</small></span><i></i><span>2 <small>Choose a format</small></span><i></i><span>3 <small>Start studying</small></span></div>
+<div class="upload-layout">
+<div class="panel">
+<div id="dropzone" class="dropzone"><div class="uploadicon">↑</div><h2>Drag and drop your notes here</h2><p>PDF, PowerPoint, Word, Markdown, or plain text</p><button id="browse" class="primary">Browse files</button><input id="files" type="file" accept=".pdf,.pptx,.docx,.txt,.md" multiple hidden><p class="fine">15 MB per file · 12 files per upload · Text-based documents only</p></div>
+<div class="divider"><span>or start with text</span></div>
+<form id="paste-form"><label for="paste-title">Notes title</label><input id="paste-title" placeholder="e.g. Biology — Cell respiration" maxlength="150" required><label for="paste-text">Paste your class notes</label><textarea id="paste-text" rows="5" placeholder="Paste notes, definitions, or a lecture outline…" maxlength="300000" required></textarea><div class="row"><button class="secondary" type="submit">Save pasted notes</button><button type="button" class="textbutton" id="demo">Load sample notes</button></div></form>
+</div>
+<aside><div class="panel compact"><span class="eyebrow">BUILT FOR YOUR STUDY FLOW</span><h2>From lecture to practice.</h2><div class="feature"><b>01</b><div><h3>Bring your own material</h3><p>Keep the class content you actually need in one place.</p></div></div><div class="feature"><b>02</b><div><h3>Choose how you learn</h3><p>Flashcards, a study guide, or a short-answer practice exam.</p></div></div><div class="feature"><b>03</b><div><h3>Make it work for you</h3><p>Ask questions, open source excerpts, and edit confusing explanations.</p></div></div></div><div class="notice" id="mode-notice"></div></aside>
+</div>
+<div class="sectiontitle"><div><h2>Your source notes</h2><p>Select saved notes to create another study set.</p></div><a href="#generate" class="primary linkbutton">Choose study format →</a></div><div id="source-list"></div>
+</section>
+<section id="generate-view" class="view" hidden>
+<a class="backlink" href="#upload">← Back to notes</a><div class="eyebrow">STEP 2 — MAKE IT YOURS</div><h1>What would you like?</h1><p class="lead">Choose your sources and turn them into something you can study.</p>
+<div class="generate-layout"><div class="panel"><h2>Choose source notes <span id="selected-count" class="pill"></span></h2><p class="muted">Use one lecture or combine notes from the same course.</p><div id="choose-sources"></div><a href="#upload" class="textbutton linkbutton">+ Add more notes</a></div>
+<form id="generate-form" class="panel"><label for="study-title">Study set title</label><input id="study-title" maxlength="150" placeholder="e.g. Biology 101 — Exam 1" required><fieldset><legend>What would you like to generate?</legend>
+<label class="format-option"><input type="radio" name="kind" value="flashcards" checked><span><strong>Flashcards</strong><small>Cover all selected notes; card count is determined by the content.</small></span><b>▤</b></label>
+<label class="format-option"><input type="radio" name="kind" value="guide"><span><strong>Study guide</strong><small>Organized sections you can review and edit.</small></span><b>▧</b></label>
+<label class="format-option"><input type="radio" name="kind" value="exam"><span><strong>Practice exam</strong><small>Short-answer questions with revealable model answers.</small></span><b>✓</b></label></fieldset>
+<div class="two"><div><label for="item-count">Requested items</label><input id="item-count" type="number" value="12" min="3" max="30" required></div><div><label for="gen-mode">Generation mode</label><select id="gen-mode" class="mode-select"><option value="rules">Rule-based (no AI)</option><option value="ai">Cloud AI (optional)</option></select></div></div>
+<p id="flashcard-coverage-note" class="notice">Rule-based flashcards process all extracted sections. Cloud AI flashcards sample source sections, so check them against your notes.</p><label for="focus">Focus (optional)</label><input id="focus" maxlength="500" placeholder="e.g. definitions and key mechanisms"><p class="fine">Rule-based flashcards process all extracted sections. Cloud AI selects a limited set of excerpts. Study guides and exams use the requested size and may sample long notes.</p><button class="primary full" type="submit" id="generate-button">Generate study material →</button><p id="generate-status" class="muted" role="status"></p></form></div>
+</section>
+<section id="library-view" class="view" hidden>
+<div class="sectiontitle"><div><div class="eyebrow">YOUR PERSONAL WORKSPACE</div><h1>Your study materials</h1><p class="lead">Pick up where you left off.</p></div><a href="#upload" class="primary linkbutton">+ Create study material</a></div>
+<div class="toolbar"><div class="tabs" id="library-tabs"><button data-filter="all" class="selected">All materials</button><button data-filter="flashcards">Flashcards</button><button data-filter="guide">Study guides</button><button data-filter="exam">Practice exams</button></div><input type="search" id="search" placeholder="Search study materials…" aria-label="Search study materials"></div>
+<div class="stats" id="library-stats"></div><div id="material-grid" class="material-grid"></div>
+</section>
+<section id="shop-view" class="view" hidden><div class="eyebrow">LEARN AND EARN</div><h1>Rewards shop</h1><p class="lead">Earn coins the first time you master a study item, then unlock visual themes. Rewards are cosmetic only.</p><div class="shop-summary panel"><strong id="shop-balance">0 coins</strong><span>Earn 5 coins for each new mastered item. No coins are awarded again for the same item.</span></div><div id="shop-grid" class="shop-grid"></div><div class="panel backup-panel"><h2>Protect your study notes</h2><p>All data is saved to this browser. Download a complete backup before clearing browser history or changing devices.</p><div class="row wrap"><button type="button" class="secondary" id="backup-export">Download workspace backup</button><button type="button" class="secondary" id="backup-import">Restore workspace backup</button><input hidden type="file" id="backup-file" accept=".json,application/json"></div></div></section>
+<section id="study-view" class="view" hidden>
+<a href="#library" class="backlink">← Your study materials</a><div class="sectiontitle"><div><div class="eyebrow" id="study-kind"></div><h1 id="study-heading"></h1><p id="study-meta" class="muted"></p></div><div class="row wrap"><button class="secondary" id="undo">Undo last edit</button><button class="secondary" id="export-md">Export Markdown</button><button class="secondary" id="export-json">Export JSON</button></div></div>
+<div class="study-layout"><div><div class="study-toolbar"><span class="pill" id="study-progress"></span><div class="row"><button class="textbutton" id="weak-first" type="button">Weak areas first</button><label class="inline"><input type="checkbox" id="review-only">Needs review only</label><button class="textbutton" id="shuffle">Shuffle</button></div></div><div id="study-content"></div><div class="review-controls" id="review-controls"><button class="secondary" id="previous">← Previous</button><span id="card-position"></span><button class="secondary" id="next">Next →</button></div><div class="panel source-panel"><div class="sectiontitle"><h2>Source excerpts</h2><span class="pill">From your notes</span></div><p class="fine">References open extracted text from your uploaded files. A source link does not guarantee an AI answer is correct.</p><div id="source-excerpts"></div></div></div>
+<aside class="panel helper"><div class="helper-heading"><div class="helper-icon">✦</div><div><h2>Study helper</h2><p class="fine" id="helper-caption"></p></div></div><label for="chat-mode">Helper mode</label><select id="chat-mode" class="mode-select"><option value="rules">Source lookup (no AI)</option><option value="ai">Cloud AI (optional)</option></select><div class="helper-tabs"><button class="selected" id="ask-tab">Ask a question</button><button id="revise-tab">Revise current item</button></div><p class="fine" id="helper-hint">Questions include the selected study item for context.</p><div id="messages" class="messages" aria-live="polite"></div><form id="chat-form"><label class="sr-only" for="chat-input">Question or revision request</label><textarea id="chat-input" rows="3" maxlength="2000" required placeholder="Ask about the current topic…"></textarea><button class="primary full" id="chat-send" type="submit">Ask helper</button></form><p class="fine">Keep private information out of shared screenshots. AI can make mistakes; compare explanations with your notes.</p></aside></div>
+</section>
+</main>
+<footer><p>No account or server storage. Clearing browser data removes your notes. AI is optional and sends selected excerpts to your configured AI service.</p>NotePilot · GitHub Pages edition · Notes are saved in this browser, not on GitHub · Export backups regularly</footer>
+<div id="toast" role="status" hidden></div>
+<dialog id="modal"><div class="modalhead"><h2 id="modal-title"></h2><button class="iconbutton" id="modal-close" aria-label="Close dialog">×</button></div><div id="modal-body"></div></dialog>
+</body></html>
