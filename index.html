@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="./static/style.css"><script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script defer src="./config.js"></script><script defer src="./static/ocr.js"></script><script defer src="./static/gemini_direct.js"></script><script defer src="./static/web_api.js"></script><script defer src="./static/app.js"></script>
 </head>
 <body>
-<header class="topbar"><div class="navwrap"><a class="brand" href="#upload"><span class="brandmark">N</span> NotePilot</a><nav aria-label="Main navigation"><a href="#library" id="nav-library">Study materials</a><a href="#upload" id="nav-upload">Upload materials</a><a href="#shop" id="nav-shop">Rewards shop</a></nav><button type="button" id="gemini-settings" class="secondary" aria-haspopup="dialog">AI Key</button><span class="localbadge" id="coin-balance">🪙 0 coins</span></div></header>
+<header class="topbar"><div class="navwrap"><a class="brand" href="#upload"><span class="brandmark">N</span> NotePilot</a><nav aria-label="Main navigation"><a href="#library" id="nav-library">Study materials</a><a href="#upload" id="nav-upload">Upload materials</a><a href="#shop" id="nav-shop">Rewards shop</a></nav><span class="localbadge" id="coin-balance">🪙 0 coins</span></div></header>
 <main id="main">
 <section id="upload-view" class="view">
 <div class="eyebrow">YOUR NOTES. YOUR NEXT BREAKTHROUGH.</div>
@@ -49,15 +49,4 @@
 <footer><p>No account or server storage. Clearing browser data removes your notes. AI is optional and sends selected excerpts to your configured AI service.</p>NotePilot · GitHub Pages edition · Notes are saved in this browser, not on GitHub · Export backups regularly</footer>
 <div id="toast" role="status" hidden></div>
 <dialog id="modal"><div class="modalhead"><h2 id="modal-title"></h2><button class="iconbutton" id="modal-close" aria-label="Close dialog">×</button></div><div id="modal-body"></div></dialog>
-<dialog id="gemini-key-dialog" aria-labelledby="gemini-key-title">
- <div class="modalhead"><h2 id="gemini-key-title">Gemini API key (this browser only)</h2><button type="button" class="iconbutton" id="gemini-key-close" aria-label="Close AI key settings">×</button></div>
- <p class="muted">Paste your Gemini API key here instead of putting it in GitHub. It stays in this browser's local storage. Anyone using a different browser must enter their own key to use Gemini AI.</p>
- <form id="gemini-key-form">
-  <label for="gemini-key-value">Google Gemini API key</label>
-  <input id="gemini-key-value" type="password" autocomplete="off" spellcheck="false" placeholder="Paste key from Google AI Studio" required>
-  <div class="row wrap" style="margin-top:14px"><button type="submit" class="primary">Save key on this browser</button><button id="gemini-key-remove" type="button" class="secondary">Remove saved key</button></div>
- </form>
- <p id="gemini-key-state" class="fine" role="status" aria-live="polite"></p>
- <p class="fine">Your key is sent directly to Google's API when you use Gemini. Do not enter a paid key on a shared device. You can remove your saved key at any time.</p>
-</dialog>
 </body></html>
