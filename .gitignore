@@ -6,3 +6,6 @@ node_modules/
 .env.*
 !.env.example
 .wrangler/
+
+# Public deployment output contains an API key; NEVER commit it.
+_site/

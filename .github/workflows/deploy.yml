@@ -19,9 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Build website using GitHub Actions secret
+        env:
+          NOTEPILOT_GEMINI_API_KEY: ${{ secrets.NOTEPILOT_GEMINI_API_KEY }}
+        run: python3 tools/build_site.py
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: _site
+          include-hidden-files: true
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@v4
