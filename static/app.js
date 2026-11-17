@@ -18,7 +18,7 @@ async function refresh(){
  const ids=new Set(response.documents.map(d=>d.id));
  state.selected=new Set([...state.selected].filter(id=>ids.has(id)));
  for(const select of document.querySelectorAll('#gen-mode, #chat-mode'))select.querySelector('[value="ai"]').disabled=!state.model;
- $('mode-notice').replaceChildren(el('strong','',state.model?'Cloud AI available':'Works immediately — no account or API key'),
+ $('mode-notice').replaceChildren(el('strong','',state.model?'Gemini AI available':'Works immediately — no account or API key'),
  el('span','',state.model?'AI uses a separately configured cloud service. Excerpts sent to it leave this browser. Verify generated answers against your notes.':'Rule-based mode creates source-linked practice directly from your lecture materials. For optional generative AI, configure the Cloudflare Worker in the README.'));
  renderSources();renderLibrary();renderShop();
 }

@@ -2,13 +2,14 @@ name = "notepilot-ai"
 main = "worker.js"
 compatibility_date = "2026-11-16"
 
-# Set in Cloudflare dashboard or override during deployment.
+# Your API key is NOT stored here. Upload GEMINI_API_KEY via Wrangler secrets.
 [vars]
 ALLOWED_ORIGIN = "https://wparker1-dev.github.io"
-OPENAI_MODEL = "gpt-4o-mini"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 DAILY_LIMIT = "12"
 
-# Create a KV namespace and replace its identifier here.
+# Create with: npx.cmd wrangler kv namespace create RATE_LIMIT
+# Then replace the ID below with the real ID Cloudflare prints.
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

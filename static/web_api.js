@@ -282,7 +282,7 @@
     if(bits[0]!=='api')error('Unknown action.');
     if(bits[1]==='state'&&method==='GET'){
       const [docs,mats]=await Promise.all([all('documents'),all('materials')]);
-      return {documents:docs.sort((a,b)=>b.created.localeCompare(a.created)).map(summary),materials:mats.sort((a,b)=>b.updated.localeCompare(a.updated)).map(brief),ai_model:window.NOTEPILOT_CONFIG?.aiEndpoint?'Cloud AI':null};
+      return {documents:docs.sort((a,b)=>b.created.localeCompare(a.created)).map(summary),materials:mats.sort((a,b)=>b.updated.localeCompare(a.updated)).map(brief),ai_model:window.NOTEPILOT_CONFIG?.aiEndpoint?'Gemini via Cloudflare':null};
     }
     if(bits[1]==='upload'&&method==='POST'){
       const files=body.getAll('files');
