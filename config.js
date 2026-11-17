@@ -1,5 +1,4 @@
+// Public website settings only. NEVER put a Gemini API key in this file.
 window.NOTEPILOT_CONFIG = {
-  // Leave empty for a fully functional, no-cost rule-based study website.
-  // Optional: set to the URL of your own deployed Cloudflare AI Worker.
-  aiEndpoint: ""
+  geminiModel: "gemini-3.5-flash-lite"
 };

@@ -249,15 +249,8 @@
     });
   }
   async function aiRequest(task,inputs){
-    const url=window.NOTEPILOT_CONFIG?.aiEndpoint?.trim();
-    if(!url)error('Cloud AI is not configured. Choose Rule-based mode or deploy the optional AI Worker.');
-    if(!/^https:\/\//.test(url))error('AI endpoint must be HTTPS.');
-    let r;
-    try{r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task,...inputs}),signal:AbortSignal.timeout(60000)});}
-    catch{error('AI connection failed or timed out. Try rule-based mode.');}
-    const out=await r.json().catch(()=>({}));
-    if(!r.ok)error(out.error||`AI service failed (${r.status}).`);
-    return out;
+    if(!window.NotePilotGemini?.request) error('Gemini browser adapter is missing. Refresh the website.');
+    return window.NotePilotGemini.request(task,inputs);
   }
   function rich(m,sources){return {...m,sources,messages:m.messages||[],revisions:(m.revisions||[]).map((r,i)=>({id:i,created:r.created,reason:r.reason}))};}
   async function saveEdit(mid,version,update,reason){
@@ -282,7 +275,7 @@
     if(bits[0]!=='api')error('Unknown action.');
     if(bits[1]==='state'&&method==='GET'){
       const [docs,mats]=await Promise.all([all('documents'),all('materials')]);
-      return {documents:docs.sort((a,b)=>b.created.localeCompare(a.created)).map(summary),materials:mats.sort((a,b)=>b.updated.localeCompare(a.updated)).map(brief),ai_model:window.NOTEPILOT_CONFIG?.aiEndpoint?'Gemini via Cloudflare':null};
+      return {documents:docs.sort((a,b)=>b.created.localeCompare(a.created)).map(summary),materials:mats.sort((a,b)=>b.updated.localeCompare(a.updated)).map(brief),ai_model:(window.NOTEPILOT_CONFIG?.geminiApiKey && window.NOTEPILOT_CONFIG.geminiApiKey!=='PASTE_YOUR_GEMINI_API_KEY_HERE')?'Gemini (browser API)':null};
     }
     if(bits[1]==='upload'&&method==='POST'){
       const files=body.getAll('files');
